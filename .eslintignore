@@ -1,0 +1,16 @@
+/node_modules/
+/dist/
+/docs/
+/coverage/
+*/.next/
+*/dist/
+*/node_modules/
+*/packages/*/dist/
+*/packages/*/node_modules/
+*/packages/*/babel-helpers/
+*/packages/*/cjs/
+*/packages/*/es/
+*/packages/*/dist/
+*/packages/*/*.json
+*/packages/*/*.log
+*/packages/*/*.lock

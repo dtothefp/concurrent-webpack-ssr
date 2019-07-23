@@ -1,0 +1,13 @@
+# General
+.DS_Store
+
+# Dependencies
+node_modules
+
+# Logs and caches
+*.log
+.eslintcache
+
+# Project
+dist
+.npmrc
