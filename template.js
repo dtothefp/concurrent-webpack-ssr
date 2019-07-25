@@ -3,7 +3,7 @@ import Loadable from 'react-loadable';
 import {renderToString} from 'react-dom/server';
 import { ServerStyleSheet, StyleSheetManager } from 'styled-components';
 import isObject from 'is-object';
-import { getBundles } from 'react-loadable/webpack'
+import { getBundles } from 'react-loadable/webpack';
 
 // This function makes server rendering of asset references consistent with different webpack chunk/entry configurations
 function normalizeAssets(assets) {
@@ -16,11 +16,7 @@ function normalizeAssets(assets) {
 
 export default async ({clientStats, serverStats, entry}) => {
   const assetsByChunkName = clientStats.toJson().assetsByChunkName;
-  const loadableStatsPath = require.resolve('./dist/react-loadable.json');
-
-  console.log('**************', Object.keys(clientStats.toJson()))
-  console.log('**************', clientStats.toJson().assetsByChunkName)
-
+  const loadableStatsPath = require.resolve(`./dist/react-loadable.json`);
 
   delete require.cache[entry];
   delete require.cache[loadableStatsPath];
@@ -41,20 +37,19 @@ export default async ({clientStats, serverStats, entry}) => {
   await Loadable.preloadAll();
 
   const html = renderToString(Component);
-  const styles = sheet.getStyleTags();
+  const css = sheet.getStyleTags();
   const bundles = getBundles(loadableStats, modules);
-  const css = ``;
   const jsFiles = [
     ...normalizeAssets(clientStats.toJson().assetsByChunkName.client),
     ...bundles.map(({file}) => file),
   ];
 
-  const js = jsFiles
-    .filter((path) => path.endsWith('.js'))
-    .map((path) => `<script src="${path}"></script>`)
-    .join('\n');
+  console.log(`************`, jsFiles);
 
-  console.log('***BUNDLES***', bundles);
+  const js = jsFiles
+    .filter((path) => path.endsWith(`.js`))
+    .map((path) => `<script src="${path}"></script>`)
+    .join(`\n`);
 
   // then use `assetsByChunkName` for server-sider rendering
   // For example, if you have only one main chunk:
@@ -65,7 +60,7 @@ export default async ({clientStats, serverStats, entry}) => {
         ${css}
       </head>
       <body>
-        <div id="root">${html}</div>
+        <div id="app">${html}</div>
         ${js}
       </body>
     </html>

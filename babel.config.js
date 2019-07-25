@@ -12,8 +12,5 @@ module.exports = (api) => {
         },
       }],
     ],
-    plugins: [
-      `react-loadable/babel`
-    ]
   };
 };

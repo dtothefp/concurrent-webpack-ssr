@@ -11,7 +11,7 @@ const StartServerPlugin = require(`start-server-webpack-plugin`);
 const errorOverlayMiddleware = require(`react-dev-utils/errorOverlayMiddleware`);
 const WebpackBar = require(`webpackbar`);
 const {sync: findUp} = require(`find-up`);
-const { ReactLoadablePlugin } = require('react-loadable/webpack');
+const { ReactLoadablePlugin } = require(`react-loadable/webpack`);
 
 // This is the Webpack configuration factory. It's the juice!
 module.exports = (
@@ -100,17 +100,18 @@ module.exports = (
                 presets: [
                   `@babel/preset-react`,
                   [ `@babel/preset-env`, {
-                    modules: IS_WEB ? `commonjs` : false,
+                    modules: IS_WEB ? false : `commonjs`,
                   }],
                 ],
                 plugins: [
                   [ `styled-components`, {
-                    // ssr: true,
+                    ssr: true,
                     displayName: true,
                     fileName: false,
                   }],
                   `@babel/plugin-syntax-dynamic-import`,
                   `react-hot-loader/babel`,
+                  `react-loadable/babel`,
                 ],
               },
             },
@@ -389,7 +390,7 @@ module.exports = (
 
     config.plugins = [
       new ReactLoadablePlugin({
-        filename: './dist/react-loadable.json',
+        filename: `./dist/react-loadable.json`,
       }),
       ...config.plugins,
     ];
