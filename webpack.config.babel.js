@@ -133,7 +133,7 @@ module.exports = (
                   [ `styled-components`, {
                     ssr: true,
                     displayName: true,
-                    fileName: false,
+                    fileName: IS_PROD,
                   }],
                   `@babel/plugin-syntax-dynamic-import`,
                   `react-hot-loader/babel`,
@@ -296,9 +296,12 @@ module.exports = (
         path: paths.appBuildPublic,
         publicPath: clientPublicPath,
         pathinfo: true,
-        libraryTarget: `var`,
         filename: `static/js/bundle.js`,
         chunkFilename: `static/js/[name].chunk.js`,
+        // we do `export.default` in main.js so we can load scripts async. when the queue for scripts being loaded
+        // in server.js is consumed then we call `window.MAIN`
+        library: [`MAIN`],
+        libraryExport: `default`,
       };
       // Configure webpack-dev-server to serve our client-side bundle from
       // http://${dotenv.raw.HOST}:3001
@@ -326,9 +329,9 @@ module.exports = (
         // By default files from `contentBase` will not trigger a page reload.
         // Reportedly, this avoids CPU overload on some systems.
         // https://github.com/facebookincubator/create-react-app/issues/293
-        watchOptions: {
-          ignored: /node_modules/,
-        },
+        // watchOptions: {
+        // ignored: /node_modules/,
+        // },
         before(app) {
           // This lets us open files from the runtime error overlay.
           app.use(errorOverlayMiddleware());
@@ -368,7 +371,10 @@ module.exports = (
         publicPath: clientPublicPath,
         filename: `static/js/bundle.[chunkhash:8].js`,
         chunkFilename: `static/js/[name].[chunkhash:8].chunk.js`,
-        libraryTarget: `var`,
+        // we do `export.default` in main.js so we can load scripts async. when the queue for scripts being loaded
+        // in server.js is consumed then we call `window.MAIN`
+        library: [`MAIN`],
+        libraryExport: `default`,
       };
 
       config.plugins = [

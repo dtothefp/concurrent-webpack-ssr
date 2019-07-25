@@ -7,17 +7,14 @@ import { renderToString } from 'react-dom/server';
 import { getBundles } from 'react-loadable/webpack';
 import App from '../App/App';
 
-const buildDir = path.resolve(`dist`);
-
-const assets = require(`../../dist/assets.json`);
-const loadableStats = require(`../../dist/react-loadable.json`);
-
 const server = express();
 
 server
   .disable(`x-powered-by`)
   .use(express.static(`dist`))
   .get(`/*`, async (req, res) => {
+    const assets = require(`../../dist/assets.json`);
+    const loadableStats = require(`../../dist/react-loadable.json`);
     const context = {};
     const sheet = new ServerStyleSheet();
     const modules = [];
@@ -48,8 +45,21 @@ server
 
     const js = jsFiles
       .filter((path) => path.endsWith(`.js`))
-      .map((path) => `<script src="${path}"></script>`)
-      .join(`\n`);
+      .map((path) => `<script onload="window.LOAD()" src="${path}"></script>`);
+
+    const loader = `
+      <script>
+        let scripts = ${js.length};
+        window.LOAD = function() {
+          scripts --;
+
+          if (scripts === 0) {
+            window.MAIN();
+          }
+        }
+      </script>`;
+
+    js.unshift(loader);
 
     const html = `
     <!doctype html>
@@ -59,11 +69,10 @@ server
           <meta charset="utf-8" />
           <title>Welcome to Razzle</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          ${css}
       </head>
       <body>
         <div id="app">${markup}</div>
-        ${js}
+        ${js.join(`\n`)}
       </body>
     </html>
     `;
