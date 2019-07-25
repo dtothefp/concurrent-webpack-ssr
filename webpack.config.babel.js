@@ -21,6 +21,11 @@ module.exports = (
     process.env.NODE_ENV === `development`;
   }
 
+  // Capture any --inspect or --inspect-brk flags (with optional values) so that we
+  // can pass them when we invoke nodejs
+  const INSPECT_BRK = process.argv.find((arg) => arg.match(/--inspect-brk(=|$)/));
+  const INSPECT = process.argv.find((arg) => arg.match(/--inspect(=|$)/));
+
   const appDirectory = fs.realpathSync(process.cwd());
   const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
   const nodePaths = (process.env.NODE_PATH || ``)
@@ -40,7 +45,7 @@ module.exports = (
     appNodeModules: resolveApp(`node_modules`),
     appSrc: resolveApp(`src`),
     appPackageJson: resolveApp(`package.json`),
-    appServerIndexJs: resolveApp(`src/App/App.js`),
+    appServerIndexJs: resolveApp(`src/server/index.js`),
     appClientIndexJs: resolveApp(`src/main.js`),
     nodePaths,
   };
@@ -60,6 +65,26 @@ module.exports = (
   const modules = [`node_modules`].concat(
     path.dirname(appNodeModules) !== cwd() ? appNodeModules : [],
   );
+
+  const targets = {};
+  const evergreenBrowsers = [
+    `and_chr >= 60`,
+    `and_ff >= 60`,
+    `chrome >= 60`,
+    `firefox >= 60`,
+    `ios_saf >= 11.3`,
+    `safari >= 12`,
+    `samsung >= 8.2`,
+    `opera >= 55`,
+  ];
+
+  if (IS_NODE) {
+    // hard code version for Lambda
+    targets.node = `10.15`;
+  } else if (IS_WEB) {
+    targets.browsers = evergreenBrowsers;
+  }
+
   // This is our base webpack config.
   const config = {
     // Set webpack mode:
@@ -101,6 +126,7 @@ module.exports = (
                   `@babel/preset-react`,
                   [ `@babel/preset-env`, {
                     modules: IS_WEB ? false : `commonjs`,
+                    targets,
                   }],
                 ],
                 plugins: [
@@ -112,6 +138,14 @@ module.exports = (
                   `@babel/plugin-syntax-dynamic-import`,
                   `react-hot-loader/babel`,
                   `react-loadable/babel`,
+                  [ `@babel/plugin-transform-runtime`, {
+                    helpers: true,
+                    // we handle this with babel-polyfill
+                    corejs: false,
+                    useESModules: !IS_NODE,
+                    // we handle this with babel-polyfill
+                    regenerator: false,
+                  }],
                 ],
               },
             },
@@ -201,6 +235,12 @@ module.exports = (
       config.entry.unshift(`razzle-dev-utils/prettyNodeErrors`);
 
       const nodeArgs = [ `-r`, `source-map-support/register` ];
+
+      if (INSPECT_BRK) {
+        nodeArgs.push(INSPECT_BRK);
+      } else if (INSPECT) {
+        nodeArgs.push(INSPECT);
+      }
 
       config.plugins = [
         ...config.plugins,

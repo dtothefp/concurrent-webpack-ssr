@@ -1,6 +1,6 @@
 import path from 'path';
 import webpack from 'webpack';
-import devServer from 'webpack-dev-server';
+import DevServer from 'webpack-dev-server';
 import createConfig from './webpack.config.babel';
 import template from './template';
 
@@ -19,26 +19,7 @@ if (NODE_ENV === `development`) {
 
   // Create a new instance of Webpack-dev-server for our client assets.
   // This will actually run on a different port than the users app.
-  const app = new devServer(clientCompiler, {
-    ...serverOptions,
-    after(app) {
-      if (typeof serverOptions.after === `function`) {
-        serverOptions.after(app);
-      }
-
-      app.use(async (req, res, next) => {
-        if (!routeRe.test(req.url)) return next();
-
-        const html = await template({
-          entry: require.resolve(path.join(serverConfig.output.path, serverConfig.output.filename)),
-          clientStats: res.locals.webpackStats,
-          serverStats,
-        });
-
-        res.status(200).send(html);
-      });
-    },
-  });
+  const app = new DevServer(clientCompiler, serverOptions);
 
   let watching = false;
 

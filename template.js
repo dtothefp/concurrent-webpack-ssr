@@ -44,8 +44,6 @@ export default async ({clientStats, serverStats, entry}) => {
     ...bundles.map(({file}) => file),
   ];
 
-  console.log(`************`, jsFiles);
-
   const js = jsFiles
     .filter((path) => path.endsWith(`.js`))
     .map((path) => `<script src="${path}"></script>`)
