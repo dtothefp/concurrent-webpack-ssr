@@ -1,1 +1,0 @@
-{"name":"@dfp/next","version":"0.0.0","license":"MIT","private":"true","scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"file:../../../next-clone/packages/next","react":"16.8.6","react-dom":"16.8.6"},"readme":"ERROR: No README data found!","_id":"@dfp/next@0.0.0"}
