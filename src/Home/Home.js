@@ -4,7 +4,7 @@ import Child from './Child';
 
 export default () => (
   <>
-  <H1>Home</H1>
-  <Child />
+    <H1>Home</H1>
+    <Child />
   </>
 );

@@ -4,7 +4,7 @@ import React from 'react';
 import Heading from './app.css';
 import Home from '../Home';
 
-setConfig({ logLevel: 'debug' });
+setConfig({ logLevel: `debug` });
 
 const App = () => (
   <div>

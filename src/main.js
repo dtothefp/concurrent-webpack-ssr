@@ -1,5 +1,8 @@
 import React from 'react';
-import { render } from 'react-dom';
+import { hydrate } from 'react-dom';
+import Loadable from 'react-loadable';
 import App from './App/App';
 
-render(<App />, document.getElementById(`app`));
+Loadable.preloadReady().then(() => {
+  hydrate(<App />, document.getElementById(`app`));
+});

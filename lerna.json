@@ -1,0 +1,13 @@
+{
+  "command": {
+    "publish": {
+      "message": "[ci skip]: publish %s"
+    }
+  },
+  "packages": [
+    "packages/*"
+  ],
+  "npmClient": "yarn",
+  "useWorkspaces": true,
+  "version": "0.0.0"
+}
