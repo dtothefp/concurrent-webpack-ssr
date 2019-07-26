@@ -5,6 +5,7 @@ const fs = require(`fs-extra`);
 const path = require(`path`);
 const webpack = require(`webpack`);
 const TerserPlugin = require(`terser-webpack-plugin`);
+const MiniCssExtractPlugin = require(`mini-css-extract-plugin`);
 const nodeExternals = require(`webpack-node-externals`);
 const AssetsPlugin = require(`assets-webpack-plugin`);
 const StartServerPlugin = require(`start-server-webpack-plugin`);
@@ -166,35 +167,35 @@ module.exports = (
             },
           ],
         },
-        {
-          exclude: [
-            /\.html$/,
-            /\.(js|jsx|mjs)$/,
-            /\.(s?css|sass)$/,
-            /\.json$/,
-            /\.bmp$/,
-            /\.gif$/,
-            /\.jpe?g$/,
-            /\.png$/,
-          ],
-          loader: require.resolve(`file-loader`),
-          options: {
-            name: `static/media/[name].[hash:8].[ext]`,
-            emitFile: true,
-          },
-        },
-        // "url" loader works like "file" loader except that it embeds assets
-        // smaller than specified limit in bytes as data URLs to avoid requests.
-        // A missing `test` is equivalent to a match.
-        {
-          test: [ /\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/ ],
-          loader: require.resolve(`url-loader`),
-          options: {
-            limit: 10000,
-            name: `static/media/[name].[hash:8].[ext]`,
-            emitFile: true,
-          },
-        },
+        // {
+          // exclude: [
+            // /\.html$/,
+            // /\.(js|jsx|mjs)$/,
+            // /\.(s?css|sass)$/,
+            // /\.json$/,
+            // /\.bmp$/,
+            // /\.gif$/,
+            // /\.jpe?g$/,
+            // /\.png$/,
+          // ],
+          // loader: require.resolve(`file-loader`),
+          // options: {
+            // name: `static/media/[name].[hash:8].[ext]`,
+            // emitFile: true,
+          // },
+        // },
+        // // "url" loader works like "file" loader except that it embeds assets
+        // // smaller than specified limit in bytes as data URLs to avoid requests.
+        // // A missing `test` is equivalent to a match.
+        // {
+          // test: [ /\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/ ],
+          // loader: require.resolve(`url-loader`),
+          // options: {
+            // limit: 10000,
+            // name: `static/media/[name].[hash:8].[ext]`,
+            // emitFile: true,
+          // },
+        // },
 
         // "postcss" loader applies autoprefixer to our CSS.
         // "css" loader resolves paths in CSS and adds assets as dependencies.
@@ -217,27 +218,44 @@ module.exports = (
                 },
               },
             ]
-            :
-            [
-              {
-                loader:ExtractCssChunks.loader,
-                options: {
-                  hot: IS_DEV, // if you want HMR
-                  reloadAll: process.env.HMR === `all`, // when desperation kicks in - this is a brute force HMR flag
+            : IS_DEV
+              ? [
+                // require.resolve('style-loader'),
+                {
+                  loader: MiniCssExtractPlugin.loader,
+                  options: {
+                  // only enable hot in development
+                    hmr: IS_DEV,
+                    // if hmr does not work, this is a forceful method.
+                    reloadAll: process.env.HMR === `all`,
+                  },
                 },
-              },
-              {
-                loader: require.resolve(`css-loader`),
-                options: {
-                  importLoaders: 1,
-                  modules: false,
+                {
+                  loader: require.resolve(`css-loader`),
+                  options: {
+                    importLoaders: 1,
+                  },
                 },
-              },
-              {
-                loader: require.resolve(`postcss-loader`),
-                options: postcssOptionsConfig,
-              },
-            ],
+                {
+                  loader: require.resolve(`postcss-loader`),
+                  options: postcssOptionsConfig,
+                },
+              ]
+              : [
+                MiniCssExtractPlugin.loader,
+                {
+                  loader: require.resolve(`css-loader`),
+                  options: {
+                    importLoaders: 1,
+                    modules: false,
+                    minimize: true,
+                  },
+                },
+                {
+                  loader: require.resolve(`postcss-loader`),
+                  options: postcssOptionsConfig,
+                },
+              ],
         },
 
         // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
@@ -258,28 +276,47 @@ module.exports = (
                 },
               },
             ]
-            :
-            [
-              {
-                loader:ExtractCssChunks.loader,
-                options: {
-                  hot: IS_DEV, // if you want HMR
-                  reloadAll: process.env.HMR === `all`, // when desperation kicks in - this is a brute force HMR flag
+            : IS_DEV
+              ? [
+                // require.resolve('style-loader'),
+                {
+                  loader: MiniCssExtractPlugin.loader,
+                  options: {
+                    // only enable hot in development
+                    hmr: IS_DEV,
+                    // if hmr does not work, this is a forceful method.
+                    reloadAll: process.env.HMR === `all`,
+                  },
                 },
-              },
-              {
-                loader: require.resolve(`css-loader`),
-                options: {
-                  modules: true,
-                  importLoaders: 1,
-                  localIdentName: `[path]__[name]___[local]`,
+                {
+                  loader: require.resolve(`css-loader`),
+                  options: {
+                    modules: true,
+                    importLoaders: 1,
+                    localIdentName: `[path]__[name]___[local]`,
+                  },
                 },
-              },
-              {
-                loader: require.resolve(`postcss-loader`),
-                options: postcssOptionsConfig,
-              },
-            ],
+                {
+                  loader: require.resolve(`postcss-loader`),
+                  options: postcssOptionsConfig,
+                },
+              ]
+              : [
+                MiniCssExtractPlugin.loader,
+                {
+                  loader: require.resolve(`css-loader`),
+                  options: {
+                    modules: true,
+                    importLoaders: 1,
+                    minimize: true,
+                    localIdentName: `[path]__[name]___[local]`,
+                  },
+                },
+                {
+                  loader: require.resolve(`postcss-loader`),
+                  options: postcssOptionsConfig,
+                },
+              ],
         },
       ],
     },
@@ -363,12 +400,12 @@ module.exports = (
     cacheGroups: {
       default: false,
       vendors: false,
-      styles: {
-        name: `styles`,
-        test: new RegExp(`\\.+(css)$`),
-        chunks: `all`,
-        enforce: true,
-      },
+      // styles: {
+      // name: `styles`,
+      // test: new RegExp(`\\.+(css)$`),
+      // chunks: `all`,
+      // enforce: true,
+      // },
     },
   };
 
@@ -380,16 +417,13 @@ module.exports = (
         path: paths.appBuild,
         filename: `assets.json`,
       }),
-      new ExtractCssChunks({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: IS_DEV
-          ? `static/chunks/[name].css`
-          : `static/chunks/[name].[contenthash:8].css`,
-        chunkFilename: IS_DEV
-          ? `static/chunks/[name].chunk.css`
-          : `static/chunks/[name].[contenthash:8].chunk.css`,
-        hot: IS_DEV,
+      new MiniCssExtractPlugin({
+        filename: `static/css/bundle.[contenthash:8].css`,
+        chunkFilename: `static/css/[name].[contenthash:8].chunk.css`,
+        // allChunks: true because we want all css to be included in the main
+        // css bundle when doing code splitting to avoid FOUC:
+        // https://github.com/facebook/create-react-app/issues/2415
+        allChunks: true,
       }),
       // Maybe we should move to this???
       // new ManifestPlugin({
@@ -459,7 +493,7 @@ module.exports = (
       config.plugins = [
         ...config.plugins,
         new webpack.HotModuleReplacementPlugin({
-          multiStep: true,
+          // multiStep: true,
         }),
       ];
 

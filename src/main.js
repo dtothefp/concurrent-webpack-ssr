@@ -3,7 +3,7 @@ import { hydrate } from 'react-dom';
 import Loadable from 'react-loadable';
 import App from './App/App';
 
-// import '@siesta/css/base.css';
+import '@siesta/css/base.css';
 
 // IMPORTANT:
 // 1) load the chunk JS file before the main.js file or load them both and

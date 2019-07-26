@@ -31,25 +31,33 @@ server
 
     const css = sheet.getStyleTags();
     const bundles = getBundles(loadableStats, modules);
+
     const chunks = bundles
       .filter(({file}) => !file.endsWith(`.map`))
-      .map(({file}) => {
-        const chunkName = path.basename(file).replace(/\..*$/, ``);
+      .reduce((acc, {file, name}) => {
+        const assetKey = path.basename(name, `.js`);
 
-        return assets[chunkName].js;
+        if (file.endsWith(`.css`)) {
+          acc.css.push(assets[assetKey].css);
+        }
+
+        if (file.endsWith(`.js`)) {
+          acc.js.push(assets[assetKey].js);
+        }
+
+        return acc;
+      }, {
+        css: [assets.client.css],
+        js: [assets.client.js],
       });
-    const jsFiles = [
-      assets.client.js,
-      ...chunks,
-    ];
 
-    const js = jsFiles
-      .filter((path) => path.endsWith(`.js`))
-      .map((path) => `<script onload="window.LOAD()" src="${path}"></script>`);
 
-    const loader = `
+    const cssTags = chunks.css.map((fp) => `<link rel="stylesheet" data-href="${path.basename(fp)}" href="${fp}" />`).join(`\n`);
+    const jsTags = chunks.js.map((fp) => `<script onload="window.LOAD()" src="${fp}"></script>`).join(`\n`);
+
+    const js = `
       <script>
-        let scripts = ${js.length};
+        let scripts = ${jsTags.length};
         window.LOAD = function() {
           scripts --;
 
@@ -59,8 +67,6 @@ server
         }
       </script>`;
 
-    js.unshift(loader);
-
     const html = `
     <!doctype html>
     <html lang="">
@@ -69,10 +75,13 @@ server
           <meta charset="utf-8" />
           <title>Welcome to Razzle</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
+          ${cssTags}
+          ${css}
       </head>
       <body>
         <div id="app">${markup}</div>
-        ${js.join(`\n`)}
+        ${js}
+        ${jsTags}
       </body>
     </html>
     `;

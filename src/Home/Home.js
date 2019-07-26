@@ -1,10 +1,13 @@
 import React from 'react';
-import H1 from './Home.css';
+import cx from 'classnames';
+import styles from './Home.css';
 import Child from './Child';
+
+console.log(`((((((((((CHILD))))))))))`, styles);
 
 export default () => (
   <>
-    <H1>Home</H1>
+    <h1 className={cx(styles.bg)}>Home</h1>
     <Child />
   </>
 );

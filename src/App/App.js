@@ -4,7 +4,7 @@ import React from 'react';
 import Home from '../Home';
 import styles from './App.css';
 
-console.log('(((((())))))', styles)
+console.log(`(((((())))))`, styles);
 
 setConfig({ logLevel: `debug` });
 
