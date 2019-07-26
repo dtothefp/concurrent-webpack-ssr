@@ -13,8 +13,14 @@ server
   .disable(`x-powered-by`)
   .use(express.static(`dist`))
   .get(`/*`, async (req, res) => {
+    Object.keys(require.cache).forEach((key) => {
+      if (/(assets|react-loadable)\.json$/.test(key)) {
+        delete require.cache[key];
+      }
+    });
     const assets = require(`../../dist/assets.json`);
     const loadableStats = require(`../../dist/react-loadable.json`);
+
     const context = {};
     const sheet = new ServerStyleSheet();
     const modules = [];
