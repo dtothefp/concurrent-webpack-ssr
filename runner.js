@@ -30,7 +30,11 @@ if (NODE_ENV === `development`) {
       stats: `none`,
     },
     /* eslint-disable no-unused-vars */
-    (err, stats) => {}
+    (err, stats) => {
+      if (err) return console.error(err);
+
+      console.log(stats.toString());
+    }
   );
 
   // Start our server webpack instance in watch mode after assets compile

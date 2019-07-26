@@ -12,6 +12,8 @@ const errorOverlayMiddleware = require(`react-dev-utils/errorOverlayMiddleware`)
 const WebpackBar = require(`webpackbar`);
 const {sync: findUp} = require(`find-up`);
 const { ReactLoadablePlugin } = require(`react-loadable/webpack`);
+const ExtractCssChunks = require(`extract-css-chunks-webpack-plugin`);
+const OptimizeCssAssetsWebpackPlugin = require(`optimize-css-assets-webpack-plugin`);
 
 // This is the Webpack configuration factory. It's the juice!
 module.exports = (
@@ -34,6 +36,16 @@ module.exports = (
     .filter((folder) => !path.isAbsolute(folder))
     .map(resolveApp);
   const appNodeModules = findUp(`node_modules`, {type: `directory`});
+  const postcssConfigPath = findUp(`postcss.config.js`, {
+    cwd: path.resolve(__dirname),
+  });
+  const postcssLoaderOptions = {};
+  const postcssOptionsConfig = {
+    ...postcssLoaderOptions,
+    config: {
+      path: postcssConfigPath,
+    },
+  };
 
   const paths = {
     dotenv: resolveApp(`.env`),
@@ -98,8 +110,11 @@ module.exports = (
     // We need to tell webpack how to resolve both Razzle's node_modules and
     // the users', so we use resolve and resolveLoader.
     resolve: {
-      modules,
-      extensions: [ `.jsx`, `.js`, `.json` ],
+      modules: [
+        ...modules,
+        findUp(path.join(`node_modules`, `@siesta`, `css`), {type: `directory`}),
+      ],
+      extensions: [ `.jsx`, `.js`, `.json`, `.css` ],
       alias: {
         // This is required so symlinks work during development.
         'webpack/hot/poll': require.resolve(`webpack/hot/poll`),
@@ -181,6 +196,91 @@ module.exports = (
           },
         },
 
+        // "postcss" loader applies autoprefixer to our CSS.
+        // "css" loader resolves paths in CSS and adds assets as dependencies.
+        // "style" loader turns CSS into JS modules that inject <style> tags.
+        // In production, we use a plugin to extract that CSS to a file, but
+        // in development "style" loader enables hot editing of CSS.
+        //
+        // Note: this yields the exact same CSS config as create-react-app.
+        {
+          test: /(@siesta|src)\/css\/\.css$/,
+          exclude: [paths.appBuild],
+          use: IS_NODE
+            ? // Style-loader does not work in Node.js without some crazy
+          // magic. Luckily we just need css-loader.
+            [
+              {
+                loader: require.resolve(`css-loader`),
+                options: {
+                  importLoaders: 1,
+                },
+              },
+            ]
+            :
+            [
+              {
+                loader:ExtractCssChunks.loader,
+                options: {
+                  hot: IS_DEV, // if you want HMR
+                  reloadAll: process.env.HMR === `all`, // when desperation kicks in - this is a brute force HMR flag
+                },
+              },
+              {
+                loader: require.resolve(`css-loader`),
+                options: {
+                  importLoaders: 1,
+                  modules: false,
+                },
+              },
+              {
+                loader: require.resolve(`postcss-loader`),
+                options: postcssOptionsConfig,
+              },
+            ],
+        },
+
+        // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
+        // using the extension .module.css
+        {
+          test: /\.css$/,
+          exclude: [ paths.appBuild, /css\/\.css$/ ],
+          use: IS_NODE
+            ? [
+              {
+                // on the server we do not need to embed the css and just want the identifier mappings
+                // https://github.com/webpack-contrib/css-loader#scope
+                loader: require.resolve(`css-loader/locals`),
+                options: {
+                  modules: true,
+                  importLoaders: 1,
+                  localIdentName: `[path]__[name]___[local]`,
+                },
+              },
+            ]
+            :
+            [
+              {
+                loader:ExtractCssChunks.loader,
+                options: {
+                  hot: IS_DEV, // if you want HMR
+                  reloadAll: process.env.HMR === `all`, // when desperation kicks in - this is a brute force HMR flag
+                },
+              },
+              {
+                loader: require.resolve(`css-loader`),
+                options: {
+                  modules: true,
+                  importLoaders: 1,
+                  localIdentName: `[path]__[name]___[local]`,
+                },
+              },
+              {
+                loader: require.resolve(`postcss-loader`),
+                options: postcssOptionsConfig,
+              },
+            ],
+        },
       ],
     },
     plugins: [
@@ -219,6 +319,7 @@ module.exports = (
     // Add some plugins...
     config.plugins = [
       ...config.plugins,
+      // AWESOME: don't chunk for the server build!!!
       new webpack.optimize.LimitChunkCountPlugin({
         maxChunks: 1,
       }),
@@ -262,6 +363,12 @@ module.exports = (
     cacheGroups: {
       default: false,
       vendors: false,
+      styles: {
+        name: `styles`,
+        test: new RegExp(`\\.+(css)$`),
+        chunks: `all`,
+        enforce: true,
+      },
     },
   };
 
@@ -272,6 +379,17 @@ module.exports = (
       new AssetsPlugin({
         path: paths.appBuild,
         filename: `assets.json`,
+      }),
+      new ExtractCssChunks({
+        // Options similar to the same options in webpackOptions.output
+        // both options are optional
+        filename: IS_DEV
+          ? `static/chunks/[name].css`
+          : `static/chunks/[name].[contenthash:8].css`,
+        chunkFilename: IS_DEV
+          ? `static/chunks/[name].chunk.css`
+          : `static/chunks/[name].[contenthash:8].chunk.css`,
+        hot: IS_DEV,
       }),
       // Maybe we should move to this???
       // new ManifestPlugin({
@@ -322,10 +440,10 @@ module.exports = (
         },
         host: devServerHost,
         hot: true,
-        noInfo: true,
+        // noInfo: true,
         overlay: false,
         port: devServerPort,
-        quiet: true,
+        // quiet: true,
         // By default files from `contentBase` will not trigger a page reload.
         // Reportedly, this avoids CPU overload on some systems.
         // https://github.com/facebookincubator/create-react-app/issues/293
@@ -381,11 +499,16 @@ module.exports = (
         ...config.plugins,
         new webpack.HashedModuleIdsPlugin(),
         new webpack.optimize.AggressiveMergingPlugin(),
+        new OptimizeCssAssetsWebpackPlugin({
+          cssProcessorOptions: {
+            discardComments: { removeAll: true },
+          },
+        }),
       ];
 
       config.optimization = {
         splitChunks,
-        minimize: false,
+        minimize: IS_PROD,
         minimizer: [
           new TerserPlugin({
             terserOptions: {

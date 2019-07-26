@@ -17,7 +17,19 @@
     "serve": "serve -p 8080 dist"
   },
   "devDependencies": {
+    "@luna/browserslist-config": "13.0.0",
+    "@siesta/css": "7.18.0",
+    "autoprefixer": "9.6.1",
+    "extract-css-chunks-webpack-plugin": "4.5.6",
     "is-object": "1.0.1",
+    "optimize-css-assets-webpack-plugin": "5.0.3",
+    "postcss-calc": "7.0.1",
+    "postcss-custom-media": "7.0.8",
+    "postcss-custom-properties": "9.0.2",
+    "postcss-discard-comments": "4.0.2",
+    "postcss-discard-empty": "4.0.1",
+    "postcss-import": "12.0.1",
+    "postcss-nested": "4.1.2",
     "styled-components": "4.3.2",
     "webpack": "4.37.0",
     "webpack-dev-server": "3.7.2",
@@ -40,5 +52,8 @@
     "react-hot-loader": "4.12.9",
     "react-loadable": "5.5.0",
     "serve": "11.1.0"
-  }
+  },
+  "browserslist": [
+    "extends @luna/browserslist-config"
+  ]
 }
