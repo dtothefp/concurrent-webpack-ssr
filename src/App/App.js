@@ -1,14 +1,16 @@
 import { hot } from 'react-hot-loader/root';
 import { setConfig } from 'react-hot-loader';
 import React from 'react';
-import Heading from './app.css';
+import styles from './App.css';
 import Home from '../Home';
 
-setConfig({ logLevel: 'debug' });
+setConfig({ logLevel: `debug` });
+
+console.log('STYLES', styles)
 
 const App = () => (
   <div>
-    <Heading>Stuff App</Heading>
+    <h1 className={styles.heading}>Stuff App</h1>
     <Home />
   </div>
 );
