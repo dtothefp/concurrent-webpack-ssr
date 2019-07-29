@@ -78,28 +78,42 @@ const clientConfig = {
   },
   module: {
     rules: [
+      // Transform ES6 with Babel
       {
-        test: /\.js$/,
+        test: /\.(js|jsx|mjs)$/,
+        include: [paths.appSrc],
         exclude: /node_modules/,
-        loader: `babel-loader`,
-        options: {
-          babelrc: false,
-          presets: [
-            `@babel/preset-react`,
-            [ `@babel/preset-env`, {
-              modules: false,
-            }],
-          ],
-          plugins: [
-            [ `styled-components`, {
-              // ssr: true,
-              displayName: true,
-              fileName: false,
-            }],
-            `@babel/plugin-syntax-dynamic-import`,
-            `react-hot-loader/babel`,
-          ],
-        },
+        use: [
+          {
+            loader: require.resolve(`babel-loader`),
+            options: {
+              babelrc: false,
+              presets: [
+                `@babel/preset-react`,
+                [ `@babel/preset-env`, {
+                  modules: false,
+                }],
+              ],
+              plugins: [
+                [ `styled-components`, {
+                  ssr: true,
+                  displayName: true,
+                  fileName: IS_PROD,
+                }],
+                `@babel/plugin-syntax-dynamic-import`,
+                `react-hot-loader/babel`,
+                `react-loadable/babel`,
+                [ `@babel/plugin-transform-runtime`, {
+                  helpers: true,
+                  // we handle this with babel-polyfill
+                  corejs: false,
+                  // we handle this with babel-polyfill
+                  regenerator: false,
+                }],
+              ],
+            },
+          },
+        ],
       },
       {
         test: /src\/css\/\.css$/,
