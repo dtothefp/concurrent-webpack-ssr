@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
 export default styled.h1`
-  color: red;
+  color: tomato;
   max-width: 100vw;
 `;

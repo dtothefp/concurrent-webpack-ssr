@@ -6,5 +6,15 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      const id = setInterval(() => {
+        try {
+          window.MAIN();
+          clearInterval(id);
+        } catch (err) {
+
+        }
+      }, 100);
+    </script>
   </body>
 </html>

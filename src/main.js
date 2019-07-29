@@ -4,4 +4,6 @@ import App from './App/App';
 
 import './css/main.css';
 
-render(<App />, document.getElementById(`app`));
+export default () => {
+  render(<App />, document.getElementById(`app`));
+};

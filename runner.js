@@ -3,18 +3,28 @@ import DevServer from 'webpack-dev-server';
 import webpackConfig from './webpack.config.babel';
 
 const {NODE_ENV} = process.env;
-const [config] = webpackConfig;
+const [clientConfig, serverConfig] = webpackConfig;
 let compiler;
 
 if (NODE_ENV === `development`) {
-  const {devServer: serverOptions} = config;
+  const {devServer: serverOptions} = clientConfig;
+  const serverCompiler = webpack(serverConfig);
 
-  config.plugins.unshift(
-    new webpack.HotModuleReplacementPlugin()
+  serverCompiler.watch(
+    {
+      quiet: true,
+      stats: `none`,
+    },
+    /* eslint-disable no-unused-vars */
+    (err, stats) => {
+      if (err) return console.error(err);
+
+      console.log(stats.toString());
+    }
   );
 
-  DevServer.addDevServerEntrypoints(config, serverOptions);
-  compiler = webpack(config);
+  DevServer.addDevServerEntrypoints(clientConfig, serverOptions);
+  compiler = webpack(clientConfig);
 
   const app = new DevServer(compiler, serverOptions);
 

@@ -6,7 +6,7 @@ import Home from '../Home';
 
 setConfig({ logLevel: `debug` });
 
-console.log('STYLES', styles)
+console.log(`STYLES`, styles);
 
 const App = () => (
   <div>
