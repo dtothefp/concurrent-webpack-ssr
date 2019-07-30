@@ -4,11 +4,11 @@ import webpackConfig from './webpack.config.babel';
 
 const {NODE_ENV} = process.env;
 const [clientConfig, serverConfig] = webpackConfig;
-let compiler;
+const serverCompiler = webpack(serverConfig);
+const compiler = webpack(clientConfig);
 
 if (NODE_ENV === `development`) {
   const {devServer: serverOptions} = clientConfig;
-  const serverCompiler = webpack(serverConfig);
 
   serverCompiler.watch(
     {
@@ -24,7 +24,6 @@ if (NODE_ENV === `development`) {
   );
 
   DevServer.addDevServerEntrypoints(clientConfig, serverOptions);
-  compiler = webpack(clientConfig);
 
   const app = new DevServer(compiler, serverOptions);
 
@@ -38,10 +37,16 @@ if (NODE_ENV === `development`) {
     });
   });
 } else {
-  compiler = webpack(config);
   compiler.run((err, stats) => {
     if (err) throw err;
 
     console.log(stats.toString());
   });
+
+  serverCompiler.run((err, stats) => {
+      if (err) return console.error(err);
+
+      console.log(stats.toString());
+    }
+  );
 }

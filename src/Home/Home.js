@@ -1,10 +1,10 @@
 import React from 'react';
-import H1 from './Home.css';
+import styles from './Home.css';
 import Child from './Child';
 
 export default () => (
   <>
-    <H1>Home</H1>
+    <h1 className={styles.heading}>Home</h1>
     <Child />
   </>
 );

@@ -232,7 +232,7 @@ const clientConfig = {
         vendors: false,
         styles: {
           name: `styles`,
-          test: new RegExp(`\\.+(css)$`),
+          test: /^src\/(?!css\/).*\.css/,
           chunks: `all`,
           enforce: true,
         },
@@ -264,9 +264,9 @@ const clientConfig = {
   },
   plugins: [
     new webpack.EnvironmentPlugin([`NODE_ENV`]),
-    new HtmlWebPackPlugin({
-      template: base(`src`, `index.html`),
-    }),
+    // new HtmlWebPackPlugin({
+      // template: base(`src`, `index.html`),
+    // }),
     new AssetsPlugin({
       path: paths.appBuild,
       filename: `assets.json`,
@@ -296,6 +296,7 @@ const clientConfig = {
     }),
   ],
   devServer: {
+    contentBase: paths.appBuild,
     serverSideRender: true,
     disableHostCheck: true,
     clientLogLevel: `none`,
@@ -331,9 +332,9 @@ const clientConfig = {
 
 const serverConfig = {
   entry: [
-    `webpack/hot/poll?300`,
+    IS_DEV ? `webpack/hot/poll?300` : null,
     paths.appServerIndexJs,
-  ],
+  ].filter(Boolean),
   output: {
     path: paths.appBuild,
     // publicPath: clientPublicPath,

@@ -13,6 +13,12 @@ server
   .disable(`x-powered-by`)
   .use(express.static(`dist`))
   .get(`/*`, async (req, res) => {
+    Object.keys(require.cache).forEach((fp) => {
+      if (/(assets|react-loadable)\.json/.test(fp)) {
+        delete require.cache[fp];
+      }
+    });
+
     const assets = require(`../../dist/assets.json`);
     const loadableStats = require(`../../dist/react-loadable.json`);
     const context = {};
@@ -29,40 +35,41 @@ server
       </Loadable.Capture>
     );
 
-    const css = [
-      `<link href="${assets.styles.css}" rel="stylesheet" />`,
-      sheet.getStyleTags()
-    ];
+    const {client} = assets;
+
     const bundles = getBundles(loadableStats, modules);
     const chunks = bundles
       .filter(({file}) => !file.endsWith(`.map`))
-      .map(({file}) => {
-        const chunkName = path.basename(file).replace(/\..*$/, ``);
+      .reduce((acc, {file}) => {
+        const ext = path.extname(file);
+        const [ basename ] = path.basename(file, ext).split(`.`);
+        const extKey = ext.replace(/^\./, ``);
 
-        return assets[chunkName].js;
+        acc[extKey].push(assets[basename][extKey]);
+
+        return acc;
+      }, {
+        css: [client.css],
+        js: [client.js],
       });
-    const jsFiles = [
-      ...chunks,
-      assets.styles.js,
-      assets.client.js,
+
+    const css = [
+      ...chunks.css.map((fp) => `<link href="${fp}" rel="stylesheet" />`),
+      sheet.getStyleTags()
     ];
 
-    const js = jsFiles
-      .filter((path) => path.endsWith(`.js`))
-      .map((path) => `<script onload="window.LOAD()" src="${path}"></script>`);
-
-    const loader = `
-      <script>
-        let scripts = ${js.length};
+    const js = [
+      `<script>
+        let scripts = ${chunks.js.length};
         window.LOAD = function() {
           scripts --;
           if (scripts === 0) {
             window.MAIN();
           }
         }
-      </script>`;
-
-    js.unshift(loader);
+      </script>`,
+      ...chunks.js.map((fp) => `<script onload="window.LOAD()" src="${fp}"></script>`),
+    ];
 
     const html = `
     <!doctype html>
