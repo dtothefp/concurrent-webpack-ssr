@@ -11,3 +11,5 @@ node_modules
 # Project
 dist
 .npmrc
+.next
+build
